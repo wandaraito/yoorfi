@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, ArrowRight } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import type { TailorProfile, Product } from '@/lib/types';
@@ -14,23 +14,17 @@ import {
 } from '@/components/AfricanIcons';
 
 const CATEGORIES = [
-  { name: 'Ready to Wear', slug: 'ready-to-wear', Icon: IconReadyToWear },
   { name: 'Custom', slug: 'custom', Icon: IconCustom },
-  { name: 'Men', slug: 'men', Icon: IconMen },
-  { name: 'Women', slug: 'women', Icon: IconWomen },
-  { name: 'Native', slug: 'native', Icon: IconNative },
-  { name: 'Dresses', slug: 'dresses', Icon: IconDress },
+  { name: 'Ready to Wear', slug: 'ready-to-wear', Icon: IconReadyToWear },
   { name: 'Agbada', slug: 'agbada', Icon: IconAgbada },
   { name: 'Senator', slug: 'senator', Icon: IconSenator },
-  { name: 'Shirts', slug: 'shirts', Icon: IconShirt },
-  { name: 'Trousers', slug: 'trousers', Icon: IconTrousers },
+  { name: 'Dresses', slug: 'dresses', Icon: IconDress },
 ];
 
 const TRENDING_IMAGES = [
-  { url: 'https://images.pexels.com/photos/35677043/pexels-photo-35677043.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Bespoke Agbada' },
-  { url: 'https://images.pexels.com/photos/20009925/pexels-photo-20009925.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Ankara Fusion' },
-  { url: 'https://images.pexels.com/photos/38250931/pexels-photo-38250931.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Modern Senator' },
-  { url: 'https://images.pexels.com/photos/37283114/pexels-photo-37283114.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Bridal Native' },
+  { url: 'https://images.pexels.com/photos/35677043/pexels-photo-35677043.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Bespoke Agbada', tailors: 24 },
+  { url: 'https://images.pexels.com/photos/20009925/pexels-photo-20009925.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Ankara Fusion', tailors: 18 },
+  { url: 'https://images.pexels.com/photos/38250931/pexels-photo-38250931.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Modern Senator', tailors: 32 },
 ];
 
 export function HomePage() {
@@ -38,43 +32,19 @@ export function HomePage() {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [featuredTailors, setFeaturedTailors] = useState<(TailorProfile & { profiles: { full_name: string; avatar_url: string | null; location: string | null } })[]>([]);
-  const [products, setProducts] = useState<(Product & { tailor_profiles: { profiles: { full_name: string } } })[]>([]);
-  const [nearbyTailors, setNearbyTailors] = useState<(TailorProfile & { profiles: { full_name: string; avatar_url: string | null; location: string | null } })[]>([]);
+  const [featuredTailors, setFeaturedTailors] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
-      const [featuredRes, productsRes, nearbyRes] = await Promise.all([
-        supabase
-          .from('tailor_profiles')
-          .select('*, profiles!tailor_id(full_name, avatar_url, location)')
-          .eq('verification_status', 'verified')
-          .eq('is_featured', true)
-          .order('rating', { ascending: false })
-          .limit(8),
-        supabase
-          .from('products')
-          .select('*, tailor_profiles!inner(profiles!tailor_id(full_name))')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(8),
-        supabase
-          .from('tailor_profiles')
-          .select('*, profiles!tailor_id(full_name, avatar_url, location)')
-          .eq('verification_status', 'verified')
-          .order('rating', { ascending: false })
-          .limit(10),
+      const [featuredRes, productsRes] = await Promise.all([
+        supabase.from('tailor_profiles').select('*, profiles!tailor_id(full_name, avatar_url, location)').eq('verification_status', 'verified').eq('is_featured', true).limit(5),
+        supabase.from('products').select('*, tailor_profiles!inner(profiles!tailor_id(full_name))').eq('is_active', true).limit(6),
       ]);
-
-      if (featuredRes.error) throw featuredRes.error;
-      if (productsRes.error) throw productsRes.error;
-      if (nearbyRes.error) throw nearbyRes.error;
-
-      setFeaturedTailors(featuredRes.data as any || []);
-      setProducts(productsRes.data as any || []);
-      setNearbyTailors(nearbyRes.data as any || []);
+      setFeaturedTailors(featuredRes.data || []);
+      setProducts(productsRes.data || []);
     } catch {
       setError(true);
     } finally {
@@ -84,129 +54,123 @@ export function HomePage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const userLocation = profile?.location || 'Lagos';
-  const nearby = nearbyTailors.filter(t => t.profiles?.location === userLocation).slice(0, 5);
-  const nearbyList = nearby.length > 0 ? nearby : nearbyTailors.slice(0, 5);
+  const userLocation = profile?.location || 'Lagos, NG';
+  const firstName = profile?.first_name || 'Chinedu';
 
   return (
-    <div className="bg-white min-h-screen">
-      {/* Editorial Header */}
-      <header className="px-5 pt-12 pb-4 sticky top-0 bg-white/95 backdrop-blur-md z-40">
-        <div className="flex items-end justify-between mb-6">
-          <div>
-            <Link to="/">
-              <Logo className="h-6 w-auto text-black" />
-            </Link>
+    <div className="bg-[#FAF9F6] min-h-screen font-sans selection:bg-[#1A1A1A] selection:text-white">
+      
+      {/* Floating Glass Header */}
+      <header className="px-5 pt-12 pb-4 sticky top-0 z-50 bg-[#FAF9F6]/70 backdrop-blur-2xl supports-[backdrop-filter]:bg-[#FAF9F6]/50">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-zinc-500 mb-1">Good morning, {firstName}</span>
+            <div className="flex items-center text-sm font-semibold text-[#1A1A1A]">
+              <MapPin className="w-4 h-4 mr-1 text-[#1A1A1A]" /> {userLocation}
+            </div>
           </div>
-          <div className="flex items-center text-[11px] font-sans font-medium uppercase tracking-widest text-zinc-400">
-            <MapPin className="w-3 h-3 mr-1" /> {userLocation}
+          <div className="w-10 h-10 rounded-full bg-white shadow-[0_8px_20px_rgb(0,0,0,0.04)] flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
+             <Logo className="h-5 w-auto text-[#1A1A1A]" />
           </div>
         </div>
 
-        {/* Minimal Search Bar */}
+        {/* Floating Smooth Search Pill */}
         <button
           onClick={() => navigate('/discover')}
-          className="w-full flex items-center bg-zinc-50 border-none rounded-none py-3.5 px-4 text-left transition-colors hover:bg-zinc-100"
+          className="w-full flex items-center bg-white rounded-full py-4 px-5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.08)] border border-white/60 transition-transform active:scale-[0.98]"
         >
-          <Search className="w-4 h-4 text-zinc-400 mr-3" />
-          <span className="text-sm font-sans text-zinc-400 tracking-wide">Search styles, tailors, fabrics...</span>
+          <Search className="w-5 h-5 text-zinc-400 mr-3" />
+          <span className="text-sm font-medium text-zinc-400 flex-1 text-left">Find your next outfit...</span>
+          <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center">
+            <ArrowRight className="w-4 h-4 text-white" />
+          </div>
         </button>
       </header>
 
-      {/* Elegant Categories */}
-      <section className="px-5 py-6">
-        <div className="flex space-x-6 overflow-x-auto no-scrollbar pb-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.slug}
-              onClick={() => navigate(`/discover?category=${cat.slug}`)}
-              className="flex flex-col items-center group shrink-0"
-            >
-              <div className="w-14 h-14 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center transition-all group-hover:border-black group-hover:bg-black group-hover:text-white text-zinc-600 mb-2">
-                <cat.Icon size={24} />
-              </div>
-              <span className="text-[10px] font-sans font-medium text-zinc-500 uppercase tracking-wider whitespace-nowrap group-hover:text-black">
-                {cat.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {error ? (
-        <ErrorState message="Could not connect to marketplace." onRetry={loadData} />
-      ) : (
-        <div className="space-y-16 pb-12">
-          
-          {/* Trending Styles - Edge to Edge Image Gallery */}
-          <section>
-            <div className="px-5 mb-4 flex items-end justify-between">
-              <h2 className="font-serif text-2xl text-black">The Atelier</h2>
-              <span className="text-[10px] font-sans uppercase tracking-widest text-zinc-400">Trending</span>
-            </div>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar px-5 pb-4">
-              {TRENDING_IMAGES.map((img, i) => (
-                <div key={i} className="relative w-[240px] aspect-[4/5] bg-zinc-100 shrink-0 group overflow-hidden cursor-pointer">
-                  <img 
-                    src={img.url} 
-                    alt={img.label} 
-                    className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 hover:scale-105" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <p className="font-serif text-white text-lg">{img.label}</p>
-                    <p className="font-sans text-[10px] uppercase tracking-widest text-zinc-300 mt-1">Explore Style</p>
-                  </div>
+      <div className="pb-24">
+        {/* Smooth Pill Categories */}
+        <section className="px-5 py-6">
+          <div className="flex space-x-3 overflow-x-auto no-scrollbar pb-4 -mx-5 px-5">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.slug}
+                onClick={() => navigate(`/discover?category=${cat.slug}`)}
+                className="flex items-center gap-2 bg-white px-4 py-3 rounded-full shadow-[0_4px_20px_-8px_rgba(0,0,0,0.05)] shrink-0 border border-transparent hover:border-zinc-200 transition-all"
+              >
+                <div className="w-6 h-6 rounded-full bg-zinc-50 flex items-center justify-center text-[#1A1A1A]">
+                  <cat.Icon size={14} />
                 </div>
-              ))}
-            </div>
-          </section>
+                <span className="text-xs font-semibold text-[#1A1A1A]">{cat.name}</span>
+              </button>
+            ))}
+          </div>
+        </section>
 
-          {/* Featured Tailors */}
-          <section className="px-5">
-            <div className="flex items-end justify-between mb-6 border-b border-zinc-100 pb-3">
-              <h2 className="font-serif text-2xl text-black">Master Tailors</h2>
-              <Link to="/discover" className="text-[10px] font-sans uppercase tracking-widest text-black flex items-center hover:text-zinc-500 transition-colors">
-                View Directory <ArrowRight className="w-3 h-3 ml-1" />
-              </Link>
-            </div>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4">
-              {loading
-                ? Array.from({ length: 3 }).map((_, i) => <TailorCardSkeleton key={i} />)
-                : featuredTailors.map((t) => <TailorCard key={t.id} tailor={t} />)}
-            </div>
-          </section>
+        {error ? (
+          <ErrorState message="Could not connect to marketplace." onRetry={loadData} />
+        ) : (
+          <div className="space-y-12">
+            
+            {/* Themed Collections (Trending) */}
+            <section>
+              <div className="px-5 mb-5 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-[#1A1A1A] tracking-tight">Curated Themes</h2>
+              </div>
+              <div className="flex gap-4 overflow-x-auto no-scrollbar px-5 pb-6 -mx-5">
+                {TRENDING_IMAGES.map((img, i) => (
+                  <div key={i} className="relative w-[280px] h-[340px] rounded-[32px] overflow-hidden shrink-0 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] group">
+                    <img src={img.url} alt={img.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#1A1A1A]/90" />
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <div className="backdrop-blur-md bg-white/20 border border-white/30 rounded-2xl p-4 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                        <h3 className="text-white font-semibold text-lg">{img.label}</h3>
+                        <p className="text-white/80 text-xs mt-1 font-medium">{img.tailors} master tailors available</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-          {/* Ready to Wear */}
-          <section className="px-5">
-            <div className="flex items-end justify-between mb-6 border-b border-zinc-100 pb-3">
-              <h2 className="font-serif text-2xl text-black">Ready to Wear</h2>
-              <Link to="/discover?type=ready_to_wear" className="text-[10px] font-sans uppercase tracking-widest text-black flex items-center hover:text-zinc-500 transition-colors">
-                Shop All <ArrowRight className="w-3 h-3 ml-1" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-              {loading
-                ? Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)
-                : products.slice(0, 6).map((p) => <ProductCard key={p.id} product={p} />)}
-            </div>
-          </section>
+            {/* Smooth Floating CTA Section */}
+            <section className="px-5">
+              <div className="bg-[#1A1A1A] rounded-[40px] p-8 relative overflow-hidden shadow-[0_20px_50px_-12px_rgba(26,26,26,0.4)]">
+                {/* Subtle background glow effect */}
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-zinc-700/40 rounded-full blur-[80px]" />
+                
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6">
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Bespoke<br />Experience</h2>
+                  <p className="text-zinc-400 text-sm mb-8 leading-relaxed max-w-[200px]">
+                    Have an exact design in mind? Upload a photo and let our top tailors quote you.
+                  </p>
+                  <button onClick={() => navigate('/discover')} className="w-full bg-white text-[#1A1A1A] font-semibold py-4 rounded-[20px] shadow-[0_8px_30px_rgba(255,255,255,0.2)] active:scale-[0.98] transition-transform">
+                    Start Custom Order
+                  </button>
+                </div>
+              </div>
+            </section>
 
-          {/* Premium CTA */}
-          <section className="px-5">
-            <div className="bg-black p-8 text-center flex flex-col items-center justify-center min-h-[300px]">
-              <h2 className="font-serif text-3xl text-white mb-3">Bespoke Design</h2>
-              <p className="font-sans text-sm text-zinc-400 mb-8 max-w-[250px] leading-relaxed">
-                Connect directly with premium tailors to craft your unique vision.
-              </p>
-              <Link to="/discover" className="border border-white text-white font-sans text-xs uppercase tracking-widest py-4 px-8 hover:bg-white hover:text-black transition-colors">
-                Commission a Piece
-              </Link>
-            </div>
-          </section>
+            {/* Master Tailors */}
+            <section className="px-5">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-xl font-bold text-[#1A1A1A] tracking-tight">Top Rated Tailors</h2>
+                <Link to="/discover" className="text-xs font-semibold text-zinc-500 hover:text-[#1A1A1A] transition-colors">
+                  See all
+                </Link>
+              </div>
+              <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-5 px-5 pb-6">
+                {loading
+                  ? Array.from({ length: 3 }).map((_, i) => <TailorCardSkeleton key={i} />)
+                  : featuredTailors.map((t) => <TailorCard key={t.id} tailor={t} />)}
+              </div>
+            </section>
 
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
