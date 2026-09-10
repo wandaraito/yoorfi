@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, ShoppingBag, Heart, Star, ChevronRight, ArrowRight } from 'lucide-react';
+import { Menu, ShoppingBag, Heart, Star, ChevronRight, ArrowRight, X, Home, Compass, Package, MessageSquare, User, Bell, Ruler } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import type { TailorProfile, Product } from '@/lib/types';
@@ -55,6 +55,8 @@ export function HomePage() {
   const [nearbyTailors, setNearbyTailors] = useState<(TailorProfile & { profiles: { full_name: string; avatar_url: string | null; location: string | null } })[]>([]);
   const [heroIndex, setHeroIndex] = useState(0);
   const heroRef = useRef<HTMLDivElement>(null);
+  const isAutoScrolling = useRef(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -104,10 +106,14 @@ export function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Sync hero scroll position
+  // Sync hero scroll position (programmatic only — not user scroll)
   useEffect(() => {
     if (heroRef.current) {
+      isAutoScrolling.current = true;
       heroRef.current.scrollTo({ left: heroIndex * heroRef.current.offsetWidth, behavior: 'smooth' });
+      // Reset flag after smooth scroll settles
+      const t = setTimeout(() => { isAutoScrolling.current = false; }, 400);
+      return () => clearTimeout(t);
     }
   }, [heroIndex]);
 
@@ -120,7 +126,10 @@ export function HomePage() {
       {/* Glass Header */}
       <header className="sticky top-0 z-50 glass-header border-b border-canvas-400/60">
         <div className="container-app flex items-center justify-between py-3">
-          <button className="p-1 -ml-1 text-ink-900 active:scale-90 transition-transform duration-150">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="p-1 -ml-1 text-ink-900 active:scale-90 transition-transform duration-150"
+          >
             <Menu className="w-5 h-5" strokeWidth={1.5} />
           </button>
           <Link to="/" className="active:scale-95 transition-transform duration-150">
@@ -167,6 +176,7 @@ export function HomePage() {
               ref={heroRef}
               className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar -mx-4"
               onScroll={(e) => {
+                if (isAutoScrolling.current) return;
                 const idx = Math.round(e.currentTarget.scrollLeft / e.currentTarget.offsetWidth);
                 setHeroIndex(idx);
               }}
@@ -402,6 +412,48 @@ export function HomePage() {
               </div>
             </div>
           </section>
+        </div>
+      )}
+
+      {/* Slide-out Menu Drawer */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[60]">
+          <div
+            className="absolute inset-0 bg-ink-900/40"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="absolute left-0 top-0 bottom-0 w-[280px] bg-white flex flex-col animate-slide-in-left">
+            <div className="flex items-center justify-between p-4 border-b border-canvas-400">
+              <span className="font-display text-lg font-semibold">Menu</span>
+              <button onClick={() => setMenuOpen(false)} className="active:scale-90 transition-transform duration-150">
+                <X className="w-5 h-5" strokeWidth={1.5} />
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto py-2">
+              {[
+                { icon: Home, label: 'Home', to: '/' },
+                { icon: Compass, label: 'Discover', to: '/discover' },
+                { icon: Package, label: 'My Orders', to: '/orders' },
+                { icon: MessageSquare, label: 'Messages', to: '/messages' },
+                { icon: User, label: 'Profile', to: '/profile' },
+                { icon: Ruler, label: 'Measurements', to: '/measurements' },
+                { icon: Bell, label: 'Notifications', to: '/notifications' },
+              ].map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-canvas-200 active:scale-[0.98] transition-all duration-150"
+                >
+                  <item.icon className="w-5 h-5 text-ink-600" strokeWidth={1.5} />
+                  <span className="text-sm font-medium">{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+            <div className="p-4 border-t border-canvas-400">
+              <p className="text-center text-xs text-ink-400 tracking-caption">yoorfit · Discover. Design. Wear.</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

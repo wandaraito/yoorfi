@@ -124,4 +124,22 @@
   .tracking-caption {
     @apply text-[10px] uppercase tracking-[0.12em] font-medium;
   }
+
+  /* Slide-out drawer from left */
+  .animate-slide-in-left {
+    animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes slideInLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+
+  /* Slide-up spring for bottom sheets */
+  .animate-slide-up-spring {
+    animation: slideUpSpring 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes slideUpSpring {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
 }
