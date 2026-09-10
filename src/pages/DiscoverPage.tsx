@@ -6,7 +6,7 @@ import type { TailorProfile, Product, NIGERIAN_CITIES } from '@/lib/types';
 import { NIGERIAN_CITIES as CITIES, formatNGN } from '@/lib/types';
 import { TailorCard } from '@/components/TailorCard';
 import { ProductCard } from '@/components/ProductCard';
-import { Skeleton, ErrorState, EmptyState } from '@/components/Feedback';
+import { Skeleton, ErrorState, EmptyState, TailorCardSkeleton } from '@/components/Feedback';
 
 type Tab = 'all' | 'tailors' | 'products';
 type SortBy = 'recommended' | 'rating' | 'price_low' | 'price_high';

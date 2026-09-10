@@ -12,7 +12,7 @@ export function ProfilePage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
-  const [favorites, setFavorites] = useState<(Favorite & { tailor_profiles: { profiles: { full_name: string; avatar_url: string | null } } })[]>([]);
+  const [favorites, setFavorites] = useState<(Favorite & { tailor_profiles: { id: string; profiles: { full_name: string; avatar_url: string | null } } })[]>([]);
   const [reviews, setReviews] = useState<(Review & { tailor_profiles: { profiles: { full_name: string } } })[]>([]);
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name || '');
@@ -27,7 +27,7 @@ export function ProfilePage() {
       const [favRes, revRes] = await Promise.all([
         supabase
           .from('favorites')
-          .select('*, tailor_profiles!inner(profiles!tailor_id(full_name, avatar_url))')
+          .select('*, tailor_profiles!inner(id, profiles!tailor_id(full_name, avatar_url))')
           .eq('user_id', user.id)
           .not('tailor_id', 'is', null),
         supabase
