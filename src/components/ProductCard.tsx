@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Heart, Star } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { formatNGN } from '@/lib/types';
+import { FadeImage } from '@/components/FadeImage';
 
 interface ProductCardProps {
   product: Product;
@@ -16,36 +17,37 @@ export function ProductCard({ product }: ProductCardProps) {
     : 0;
 
   return (
-    <Link to={`/product/${product.id}`} className="group block">
-      <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-ink-100 mb-2">
+    <Link to={`/product/${product.id}`} className="group block active:scale-[0.97] transition-transform duration-150 ease-out">
+      <div className="relative aspect-[4/5] bg-canvas-200 mb-2 overflow-hidden">
         {image ? (
-          <img
+          <FadeImage
             src={image}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full"
+            imgClassName=""
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-ink-300">
-            <span className="text-sm">No image</span>
+            <span className="text-xs tracking-caption">No image</span>
           </div>
         )}
         {hasDiscount && (
-          <div className="absolute top-2 left-2 rounded-full bg-rust-500 text-white text-[10px] font-bold px-2 py-0.5">
+          <div className="absolute top-2 left-2 bg-crimson-500 text-white text-[10px] font-bold px-2 py-0.5 tracking-caption">
             -{discountPct}%
           </div>
         )}
         <button
           onClick={(e) => { e.preventDefault(); }}
-          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:bg-white transition"
+          className="absolute top-2 right-2 w-8 h-8 bg-white/80 backdrop-blur flex items-center justify-center hover:bg-white transition-colors active:scale-90"
         >
           <Heart className="w-4 h-4 text-ink-700" />
         </button>
       </div>
       <div>
-        <p className="text-[10px] text-ink-400 uppercase tracking-wide mb-0.5">{tailorName}</p>
+        <p className="tracking-caption text-ink-400 mb-0.5">{tailorName}</p>
         <h3 className="text-sm font-medium leading-snug line-clamp-1">{product.name}</h3>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-sm font-semibold tabular">{formatNGN(product.price)}</span>
+          <span className="text-sm font-bold tabular">{formatNGN(product.price)}</span>
           {hasDiscount && (
             <span className="text-xs text-ink-400 line-through tabular">{formatNGN(product.compare_at_price)}</span>
           )}

@@ -2,6 +2,7 @@ import { Star, BadgeCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { TailorProfile } from '@/lib/types';
 import { formatNGN } from '@/lib/types';
+import { FadeImage } from '@/components/FadeImage';
 
 interface TailorCardProps {
   tailor: TailorProfile & { profiles?: { full_name: string; avatar_url: string | null; location: string | null } };
@@ -17,8 +18,11 @@ export function TailorCard({ tailor, variant = 'horizontal' }: TailorCardProps) 
 
   if (variant === 'compact') {
     return (
-      <Link to={`/tailor/${tailor.id}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-cream-100 transition">
-        <div className="w-12 h-12 rounded-full overflow-hidden bg-ink-100 shrink-0">
+      <Link
+        to={`/tailor/${tailor.id}`}
+        className="flex items-center gap-3 p-3 hover:bg-canvas-200 transition-colors active:scale-[0.98] duration-150"
+      >
+        <div className="w-12 h-12 rounded-full overflow-hidden bg-canvas-200 shrink-0">
           {avatar ? (
             <img src={avatar} alt={name} className="w-full h-full object-cover" />
           ) : (
@@ -27,7 +31,7 @@ export function TailorCard({ tailor, variant = 'horizontal' }: TailorCardProps) 
             </div>
           )}
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-0 flex-1">
           <div className="flex items-center gap-1">
             <p className="font-medium text-sm truncate">{name}</p>
             {isVerified && <BadgeCheck className="w-3.5 h-3.5 text-clay-500 shrink-0" />}
@@ -45,20 +49,20 @@ export function TailorCard({ tailor, variant = 'horizontal' }: TailorCardProps) 
   return (
     <Link
       to={`/tailor/${tailor.id}`}
-      className="group block w-[260px] shrink-0 rounded-2xl bg-white border border-ink-100 shadow-soft overflow-hidden hover:shadow-card transition-all duration-300"
+      className="group block w-[260px] shrink-0 bg-white border border-canvas-400 overflow-hidden active:scale-[0.97] transition-transform duration-150 ease-out"
     >
-      <div className="relative h-32 bg-ink-100 overflow-hidden">
+      <div className="relative h-32 bg-canvas-200 overflow-hidden">
         {tailor.cover_image_url ? (
-          <img src={tailor.cover_image_url} alt={name} className="w-full h-full object-cover" />
+          <FadeImage src={tailor.cover_image_url} alt={name} className="w-full h-full" />
         ) : avatar ? (
-          <img src={avatar} alt={name} className="w-full h-full object-cover" />
+          <FadeImage src={avatar} alt={name} className="w-full h-full" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-ink-900">
-            <span className="font-display text-3xl text-cream-50">{name.charAt(0)}</span>
+            <span className="font-display text-3xl text-canvas-50">{name.charAt(0)}</span>
           </div>
         )}
         {isVerified && (
-          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-full bg-white/90 backdrop-blur px-2 py-1">
+          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-white/90 backdrop-blur px-2 py-1">
             <BadgeCheck className="w-3.5 h-3.5 text-clay-500" />
             <span className="text-[10px] font-semibold text-ink-900">Verified</span>
           </div>
@@ -75,8 +79,8 @@ export function TailorCard({ tailor, variant = 'horizontal' }: TailorCardProps) 
         <p className="text-xs text-ink-500 mb-2 truncate">{specialty}</p>
         <div className="flex items-center justify-between">
           <span className="text-xs text-ink-500">{location}</span>
-          <span className="text-xs font-medium text-ink-900">
-            from <span className="font-semibold">{formatNGN(tailor.starting_price)}</span>
+          <span className="text-xs text-ink-500">
+            from <span className="font-semibold text-ink-900">{formatNGN(tailor.starting_price)}</span>
           </span>
         </div>
       </div>

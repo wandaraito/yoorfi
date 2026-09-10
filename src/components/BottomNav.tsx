@@ -29,7 +29,7 @@ export function BottomNav() {
       ];
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white/95 backdrop-blur-md border-t border-ink-100 z-50">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] glass-header border-t border-canvas-400 z-50">
       <div className="flex items-center justify-around px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {items.map((item) => {
           const active = location.pathname === item.to ||
@@ -39,7 +39,7 @@ export function BottomNav() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition ${
+                `flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all duration-150 active:scale-90 ${
                   active || isActive ? 'text-ink-900' : 'text-ink-400'
                 }`
               }

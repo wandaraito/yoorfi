@@ -197,7 +197,7 @@ export function DiscoverPage() {
       {showFilters && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-ink-900/40" onClick={() => setShowFilters(false)} />
-          <div className="relative w-full max-w-[480px] bg-white rounded-t-3xl p-6 animate-slide-up max-h-[80vh] overflow-y-auto">
+          <div className="relative w-full max-w-[480px] bg-white rounded-t-3xl p-6 animate-slide-up-spring max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-xl font-semibold">Filters</h2>
               <button onClick={() => setShowFilters(false)}><X className="w-5 h-5" /></button>
